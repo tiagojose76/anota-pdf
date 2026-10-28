@@ -6,19 +6,22 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 const $ = (s) => document.querySelector(s);
 const viewer = $('#viewer');
-const state = { pdf: null, base: null, pages: [], name: '', handle: null, zoom: 1.25, tool: 'hand', current: 0, dirty: false };
+const state = { pdf: null, base: null, pages: [], name: '', handle: null, zoom: 1.25, tool: 'hand', current: 0, dirty: false, book: false };
 let views = [], history = [], future = [], gen = 0;
 const textCache = new Map();
 
 const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 const css = ([r, g, b]) => `rgb(${r * 255},${g * 255},${b * 255})`;
 const norm = (x1, y1, x2, y2) => [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)];
+const pairStart = (i) => i - (i % 2);
 
 function updateUI() {
   const has = !!state.pdf;
   $('#save').disabled = !has;
-  for (const id of ['#rotate', '#delete', '#zoomIn', '#zoomOut']) $(id).disabled = !has;
+  for (const id of ['#rotate', '#delete', '#zoomIn', '#zoomOut', '#book']) $(id).disabled = !has;
   $('#delete').disabled = !has || state.pages.length < 2;
+  $('#prev').disabled = !has || !state.book || state.current < 2;
+  $('#next').disabled = !has || !state.book || pairStart(state.current) + 2 >= state.pages.length;
   $('#undo').disabled = !history.length;
   $('#redo').disabled = !future.length;
   $('#status').textContent = has ? `${state.dirty ? '● ' : ''}${state.name} — pág. ${state.current + 1}/${state.pages.length} — ${Math.round(state.zoom * 100)}%` : '';
@@ -27,8 +30,33 @@ function updateUI() {
 
 function setCurrent(i) {
   state.current = i;
-  views.forEach((v, j) => v.el.classList.toggle('current', j === i));
+  views.forEach((v, j) => {
+    v.el.classList.toggle('current', j === i);
+    v.el.hidden = state.book && pairStart(j) !== pairStart(i);
+  });
   updateUI();
+}
+
+// Meia-volta falsa: a página que sai gira até a lombada, troca o par, a que entra completa o giro.
+async function flip(d) {
+  const from = pairStart(state.current), to = from + 2 * d;
+  if (!state.book || viewer.inert || to < 0 || !views[to]) return;
+  const out = d > 0 ? views[from + 1] ?? views[from] : views[from];
+  const inn = d > 0 ? views[to] : views[to + 1] ?? views[to];
+  const motion = out && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const turn = (v, origin, keyframes) => {
+    v.el.style.transformOrigin = origin;
+    return v.el.animate({ transform: keyframes }, { duration: 250, easing: 'ease-in-out' }).finished;
+  };
+  // bloqueia a entrada: offsetX/offsetY não são confiáveis em elemento com rotateY
+  viewer.inert = true;
+  try {
+    if (motion) await turn(out, d > 0 ? 'left' : 'right', ['none', `rotateY(${-90 * d}deg)`]);
+    setCurrent(to);
+    if (motion) await turn(inn, d > 0 ? 'right' : 'left', [`rotateY(${90 * d}deg)`, 'none']);
+  } finally {
+    viewer.inert = false;
+  }
 }
 
 // ---------- renderização ----------
@@ -48,6 +76,7 @@ async function renderAll() {
     el.className = 'page';
     el.style.width = `${vp.width}px`;
     el.style.height = `${vp.height}px`;
+    el.hidden = state.book && pairStart(i) !== pairStart(state.current);
     const [canvas, overlay] = ['base', 'overlay'].map((cls) => {
       const c = document.createElement('canvas');
       c.className = cls;
@@ -395,8 +424,18 @@ $('#delete').onclick = () => {
   if (state.pages.length < 2 || !confirm(`Excluir a página ${state.current + 1}?`)) return;
   commit(() => state.pages.splice(state.current, 1), true);
 };
+$('#book').onclick = () => {
+  state.book = !state.book;
+  viewer.classList.toggle('book', state.book);
+  $('#book').setAttribute('aria-pressed', state.book);
+  setCurrent(state.current);
+  if (!state.book) views[state.current]?.el.scrollIntoView();
+};
+$('#prev').onclick = () => flip(-1);
+$('#next').onclick = () => flip(1);
 
 viewer.addEventListener('scroll', () => {
+  if (state.book) return;
   const mid = viewer.getBoundingClientRect().top + viewer.clientHeight / 2;
   const i = views.findIndex((v) => v.el.getBoundingClientRect().bottom > mid);
   if (i >= 0 && i !== state.current) setCurrent(i);
@@ -408,6 +447,8 @@ viewer.addEventListener('drop', async (e) => {
   if (file) openBytes(new Uint8Array(await file.arrayBuffer()), file.name);
 });
 window.addEventListener('keydown', (e) => {
+  const dir = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
+  if (dir && state.book && !['TEXTAREA', 'INPUT'].includes(e.target.tagName)) return flip(dir);
   if (!(e.ctrlKey || e.metaKey) || e.target.tagName === 'TEXTAREA') return;
   const k = e.shiftKey && e.key.toLowerCase() === 'z' ? 'y' : e.key.toLowerCase();
   const act = { s: save, o: openFile, z: () => undoRedo(history, future), y: () => undoRedo(future, history) }[k];
