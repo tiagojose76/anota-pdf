@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anota PDF</title>
+  <style>
+    :root { --bar: #1f2430; --btn: #2c3342; --on: #3d6dff; --fg: #e8ebf2; --bg: #4a4f5a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; height: 100vh; display: flex; flex-direction: column; font: 13px system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+    #bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 6px 8px; background: var(--bar); }
+    #bar button { background: var(--btn); color: var(--fg); border: 0; border-radius: 6px; padding: 6px 9px; cursor: pointer; font: inherit; }
+    #bar button:hover { filter: brightness(1.25); }
+    #bar button[aria-pressed="true"] { background: var(--on); }
+    #bar button:disabled { opacity: .4; cursor: default; }
+    #bar .sep { width: 1px; height: 22px; background: #444b5c; margin: 0 4px; }
+    #bar label { display: flex; align-items: center; gap: 4px; }
+    #bar input[type=color] { width: 30px; height: 26px; border: 0; padding: 0; background: none; }
+    #status { margin-left: auto; opacity: .75; }
+    #viewer { flex: 1; overflow: auto; padding: 16px 0; }
+    #viewer.empty { display: grid; place-items: center; font-size: 16px; opacity: .8; }
+    .page { position: relative; margin: 0 auto 16px; background: #fff; box-shadow: 0 2px 10px #0006; }
+    .page.current { outline: 3px solid var(--on); }
+    .page canvas { position: absolute; inset: 0; display: block; }
+    /* multiply contra a página de baixo, como o /AP do realce no PDF salvo */
+    .page .overlay { touch-action: none; mix-blend-mode: multiply; }
+    #viewer[data-tool="hand"] .overlay { cursor: default; touch-action: auto; }
+    #viewer[data-tool="eraser"] .overlay { cursor: not-allowed; }
+    #viewer:not([data-tool="hand"]):not([data-tool="eraser"]) .overlay { cursor: crosshair; }
+    .page textarea { position: absolute; z-index: 2; min-width: 160px; min-height: 40px; font: 14px Helvetica, Arial, sans-serif; border: 1px dashed var(--on); background: #fffffff0; color: #000; }
+  </style>
+</head>
+<body>
+  <div id="bar">
+    <button id="open" title="Abrir (Ctrl/⌘+O)">Abrir</button>
+    <button id="save" title="Salvar (Ctrl/⌘+S)" disabled>Salvar</button>
+    <span class="sep"></span>
+    <button data-tool="hand" aria-pressed="true" title="Navegar">✋</button>
+    <button data-tool="highlight" title="Realçar texto">Realce</button>
+    <button data-tool="underline" title="Sublinhar texto">Sublinhar</button>
+    <button data-tool="strikeout" title="Riscar texto">Riscar</button>
+    <button data-tool="pen" title="Caneta (sensível à pressão)">Caneta</button>
+    <button data-tool="marker" title="Marca-texto livre">Marca-texto</button>
+    <button data-tool="square" title="Retângulo">▭</button>
+    <button data-tool="circle" title="Elipse">◯</button>
+    <button data-tool="line" title="Linha">╱</button>
+    <button data-tool="arrow" title="Seta">➚</button>
+    <button data-tool="freetext" title="Caixa de texto (clique em uma existente para editar)">Texto</button>
+    <button data-tool="note" title="Nota (clique em uma existente para editar)">Nota</button>
+    <button data-tool="eraser" title="Apagar anotação">Borracha</button>
+    <span class="sep"></span>
+    <label title="Cor"><input id="color" type="color" value="#2255ff"></label>
+    <label title="Espessura">Esp. <input id="width" type="range" min="1" max="20" value="3"></label>
+    <span class="sep"></span>
+    <button id="undo" title="Desfazer (Ctrl/⌘+Z)">↶</button>
+    <button id="redo" title="Refazer (Ctrl/⌘+Y)">↷</button>
+    <span class="sep"></span>
+    <button id="zoomOut" title="Diminuir zoom">−</button>
+    <button id="zoomIn" title="Aumentar zoom">+</button>
+    <span class="sep"></span>
+    <button id="rotate" title="Girar página atual 90°">⟳ Página</button>
+    <button id="delete" title="Excluir página atual">✕ Página</button>
+    <span id="status"></span>
+  </div>
+  <div id="viewer" class="empty" data-tool="hand">Abra um PDF (botão Abrir ou arraste o arquivo aqui)</div>
+  <input id="file" type="file" accept="application/pdf,.pdf" hidden>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

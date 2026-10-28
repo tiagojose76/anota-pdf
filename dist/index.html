@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anota PDF</title>
+  <style>:root{--bar:#1f2430;--btn:#2c3342;--on:#3d6dff;--fg:#e8ebf2;--bg:#4a4f5a}*{box-sizing:border-box}body{background:var(--bg);height:100vh;color:var(--fg);flex-direction:column;margin:0;font:13px system-ui,sans-serif;display:flex}#bar{background:var(--bar);flex-wrap:wrap;align-items:center;gap:4px;padding:6px 8px;display:flex}#bar button{background:var(--btn);color:var(--fg);cursor:pointer;font:inherit;border:0;border-radius:6px;padding:6px 9px}#bar button:hover{filter:brightness(1.25)}#bar button[aria-pressed=true]{background:var(--on)}#bar button:disabled{opacity:.4;cursor:default}#bar .sep{background:#444b5c;width:1px;height:22px;margin:0 4px}#bar label{align-items:center;gap:4px;display:flex}#bar input[type=color]{background:0 0;border:0;width:30px;height:26px;padding:0}#status{opacity:.75;margin-left:auto}#viewer{flex:1;padding:16px 0;overflow:auto}#viewer.empty{opacity:.8;place-items:center;font-size:16px;display:grid}.page{background:#fff;margin:0 auto 16px;position:relative;box-shadow:0 2px 10px #0006}.page.current{outline:3px solid var(--on)}.page canvas{display:block;position:absolute;inset:0}.page .overlay{touch-action:none;mix-blend-mode:multiply}#viewer[data-tool=hand] .overlay{cursor:default;touch-action:auto}#viewer[data-tool=eraser] .overlay{cursor:not-allowed}#viewer:not([data-tool=hand]):not([data-tool=eraser]) .overlay{cursor:crosshair}.page textarea{z-index:2;border:1px dashed var(--on);color:#000;background:#fffffff0;min-width:160px;min-height:40px;font:14px Helvetica,Arial,sans-serif;position:absolute}</style>
+  <script type="module" crossorigin src="/assets/index-BDIY1AIS.js"></script>
+</head>
+<body>
+  <div id="bar">
+    <button id="open" title="Abrir (Ctrl+O)">Abrir</button>
+    <button id="save" title="Salvar (Ctrl+S)" disabled>Salvar</button>
+    <span class="sep"></span>
+    <button data-tool="hand" aria-pressed="true" title="Navegar">✋</button>
+    <button data-tool="highlight" title="Realçar texto">Realce</button>
+    <button data-tool="underline" title="Sublinhar texto">Sublinhar</button>
+    <button data-tool="strikeout" title="Riscar texto">Riscar</button>
+    <button data-tool="pen" title="Caneta (sensível à pressão)">Caneta</button>
+    <button data-tool="marker" title="Marca-texto livre">Marca-texto</button>
+    <button data-tool="square" title="Retângulo">▭</button>
+    <button data-tool="circle" title="Elipse">◯</button>
+    <button data-tool="line" title="Linha">╱</button>
+    <button data-tool="arrow" title="Seta">➚</button>
+    <button data-tool="freetext" title="Caixa de texto (clique em uma existente para editar)">Texto</button>
+    <button data-tool="note" title="Nota (clique em uma existente para editar)">Nota</button>
+    <button data-tool="eraser" title="Apagar anotação">Borracha</button>
+    <span class="sep"></span>
+    <label title="Cor"><input id="color" type="color" value="#2255ff"></label>
+    <label title="Espessura">Esp. <input id="width" type="range" min="1" max="20" value="3"></label>
+    <span class="sep"></span>
+    <button id="undo" title="Desfazer (Ctrl+Z)">↶</button>
+    <button id="redo" title="Refazer (Ctrl+Y)">↷</button>
+    <span class="sep"></span>
+    <button id="zoomOut" title="Diminuir zoom">−</button>
+    <button id="zoomIn" title="Aumentar zoom">+</button>
+    <span class="sep"></span>
+    <button id="rotate" title="Girar página atual 90°">⟳ Página</button>
+    <button id="delete" title="Excluir página atual">✕ Página</button>
+    <span id="status"></span>
+  </div>
+  <div id="viewer" class="empty" data-tool="hand">Abra um PDF (botão Abrir ou arraste o arquivo aqui)</div>
+  <input id="file" type="file" accept="application/pdf,.pdf" hidden>
+</body>
+</html>
