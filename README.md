@@ -28,3 +28,7 @@ Linha de comando: `npm run dev`. Teste do núcleo: `npm test`. No Mac, os atalho
 - Caixa de texto usa Helvetica: caracteres fora do Latin-1 aparecem como `?` no PDF salvo
 - Sem inserir, mesclar ou reordenar páginas; sem calibração, OCR, camadas ou assinatura certificada
 - Todas as páginas são renderizadas de uma vez (PDFs muito grandes ficam lentos)
+
+## Mapa do código
+
+`graphify-out/` traz um grafo de conhecimento do projeto gerado pelo graphify: abra `graph.html` no navegador para navegar, ou leia o resumo em `GRAPH_REPORT.md`. Os dados brutos ficam em `graph.json`. Para regenerar depois de mudar o código, rode `/graphify .` no Claude Code.
